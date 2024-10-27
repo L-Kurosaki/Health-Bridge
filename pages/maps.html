@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Clinic Locations</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,800" rel="stylesheet" />
+  <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-svg.css" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <link id="pagestyle" href="../assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
+  <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  
+  <style>
+    #map {
+      height: 600px;
+      width: 100%;
+    }
+    .red-ambulance-icon {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Mobile Clinic Locations</h2>
+<div id="map"></div>
+
+<script>
+  // Initialize the map centered on a default location
+  const map = L.map('map').setView([0, 0], 15); // Default coordinates (will adjust once user's location is retrieved)
+
+  // Load OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Red ambulance icon for mobile clinics
+  const ambulanceIcon = L.divIcon({
+    className: 'fa fa-ambulance red-ambulance-icon',
+    html: '<i class="fa fa-ambulance" style="color: red;"></i>',
+    iconSize: [30, 30],
+    popupAnchor: [0, -15]
+  });
+
+  // Function to convert distance (meters) to degrees (approximation)
+  const metersToDegrees = (distanceMeters) => distanceMeters / 111320;
+
+  // Geolocation: Show user's location and add mobile clinic markers around them
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userCoordinates = [position.coords.latitude, position.coords.longitude];
+
+        // Place a marker for the user's location
+        const userMarker = L.marker(userCoordinates, {
+          icon: L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64113.png', // User location icon
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+          })
+        }).addTo(map);
+
+        userMarker.bindPopup("<b>Your Location</b>").openPopup();
+
+        // Center the map on the user's location
+        map.setView(userCoordinates, 15);
+
+        // Calculate coordinates for mobile clinics at different distances
+        const clinic1Coordinates = [userCoordinates[0] + metersToDegrees(250), userCoordinates[1]]; // 250m north
+        const clinic2Coordinates = [userCoordinates[0], userCoordinates[1] + metersToDegrees(2000)]; // 2km east
+        const clinic3Coordinates = [userCoordinates[0] - metersToDegrees(2500), userCoordinates[1]]; // 2.5km south
+
+        // Add markers for each mobile clinic
+        L.marker(clinic1Coordinates, { icon: ambulanceIcon }).addTo(map)
+          .bindPopup("<b>Mobile Clinic 1</b><br>250m North from your location.");
+
+        L.marker(clinic2Coordinates, { icon: ambulanceIcon }).addTo(map)
+          .bindPopup("<b>Mobile Clinic 2</b><br>2km East from your location.");
+
+        L.marker(clinic3Coordinates, { icon: ambulanceIcon }).addTo(map)
+          .bindPopup("<b>Mobile Clinic 3</b><br>2.5km South from your location.");
+      },
+      (error) => {
+        alert("Could not retrieve your location.");
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+  }
+</script>
+
+</body>
+</html>
